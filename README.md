@@ -2,9 +2,7 @@
 
 **週間スケジュール管理システム with Discord連携**
 
-Material Design 3を採用した、シンプルで美しい週間スケジュール管理ツールです。Google Apps ScriptとGoogle Sheetsをバックエンドとして使用し、Discordへの自動投稿機能を備えています。
-
-![TRYV Screenshot](https://via.placeholder.com/1200x800/EADDFF/6750A4?text=TRYV!+Weekly+Schedule)
+Material Design 3を採用した、シンプルで美しい週間スケジュール管理ツールです。Google Apps ScriptとGoogle Sheetsをバックエンドとして使用し、Discordへの自動投稿機能を備えています。  
 
 ## ✨ 特徴
 
@@ -204,3 +202,4 @@ MIT License
 ---
 
 **TRYV!** - シンプルで美しい週間スケジュール管理 ✨
+
