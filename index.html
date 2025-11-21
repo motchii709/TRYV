@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>週間スケジュール</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #FEF7FF;
+      --bg-surface: #FFFFFF;
+      --bg-surface-variant: #F4EFF4;
+      --text-primary: #1D1B20;
+      --text-secondary: #49454F;
+      --accent-primary: #6750A4;
+      --accent-secondary: #625B71;
+      --accent-tertiary: #7D5260;
+      --border-color: #79747E;
+      --shadow: rgba(0, 0, 0, 0.1);
+      --surface-tint: #6750A4;
+      --primary-container: #EADDFF;
+      --on-primary: #FFFFFF;
+      --on-surface: #1D1B20;
+      --outline: #79747E;
+      --outline-variant: #CAC4D0;
+    }
+
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    .header {
+      background: var(--primary-container);
+      border-bottom: 1px solid var(--outline-variant);
+      padding: 1.5rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+
+    .header-content {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title-group {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+    }
+
+    .header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+      letter-spacing: 0.5px;
+    }
+
+    .header h2 {
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--text-secondary);
+      letter-spacing: 0.25px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      padding: 0.625rem 1.25rem;
+      border: none;
+      border-radius: 20px;
+      font-weight: 500;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: 'Roboto', sans-serif;
+      box-shadow: 0 1px 3px var(--shadow);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn:hover {
+      box-shadow: 0 2px 6px var(--shadow);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: var(--accent-primary);
+      color: var(--on-primary);
+    }
+
+    .btn-primary:hover {
+      background: #5842A0;
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface);
+      color: var(--accent-primary);
+      border: 1px solid var(--outline);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-surface-variant);
+    }
+
+    .btn-success {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #45a049;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+
+    .calendar {
+      background: var(--bg-surface);
+      border-radius: 12px;
+      border: 1px solid var(--outline-variant);
+      overflow: hidden;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+
+    .calendar-header {
+      display: grid;
+      grid-template-columns: 80px repeat(5, 1fr);
+      background: var(--primary-container);
+      border-bottom: 1px solid var(--outline-variant);
+    }
+
+    .calendar-header>div {
+      padding: 1rem;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      border-right: 1px solid var(--outline-variant);
+    }
+
+    .calendar-header>div:last-child {
+      border-right: none;
+    }
+
+    .calendar-header .day-header {
+      color: var(--accent-primary);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .calendar-body {
+      display: grid;
+      grid-template-columns: 80px repeat(5, 1fr);
+      position: relative;
+      background: var(--bg-surface);
+    }
+
+    .time-column {
+      border-right: 1px solid var(--outline-variant);
+      background: var(--bg-surface-variant);
+    }
+
+    .time-slot {
+      height: 80px;
+      padding: 0.5rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid var(--outline-variant);
+    }
+
+    .day-column {
+      position: relative;
+      border-right: 1px solid var(--outline-variant);
+      min-height: 100%;
+      background: var(--bg-surface);
+    }
+
+    .day-column:last-child {
+      border-right: none;
+    }
+
+    .time-cell {
+      height: 80px;
+      border-bottom: 1px solid var(--outline-variant);
+    }
+
+    .time-cell:hover {
+      background: rgba(103, 80, 164, 0.04);
+    }
+
+    .event-card {
+      background: var(--bg-surface);
+      border: 2px solid var(--event-color, var(--accent-primary));
+      border-radius: 8px;
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 3px var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .event-card:hover {
+      box-shadow: 0 4px 12px var(--shadow);
+      transform: translateY(-2px);
+      z-index: 10;
+    }
+
+    .event-card.dragging {
+      opacity: 0.6;
+    }
+
+    .event-time {
+      font-size: 0.7rem;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+      line-height: 1.2;
+      word-wrap: break-word;
+    }
+
+    .event-title {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+      line-height: 1.3;
+      word-wrap: break-word;
+    }
+
+    .event-organizer {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.25rem;
+      line-height: 1.2;
+      word-wrap: break-word;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-surface);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--outline-variant);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--outline-variant);
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--accent-primary);
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 1.5rem;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover {
+      background: rgba(103, 80, 164, 0.08);
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--outline);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: 'Roboto', sans-serif;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(103, 80, 164, 0.1);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .color-picker {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .color-option {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px var(--shadow);
+    }
+
+    .color-option:hover {
+      transform: scale(1.1);
+    }
+
+    .color-option.selected {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--accent-primary);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--outline-variant);
+    }
+
+    .btn-delete {
+      background: #f44336;
+      color: white;
+      margin-right: auto;
+    }
+
+    .btn-delete:hover {
+      background: #d32f2f;
+    }
+
+    .form-hint {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+    }
+
+    .loading {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--bg-surface);
+      padding: 2rem;
+      border-radius: 12px;
+      z-index: 2000;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--outline-variant);
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid var(--outline-variant);
+      border-top-color: var(--accent-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="header">
+    <div class="header-content">
+      <div class="header-title-group">
+        <h1>TRYV!</h1>
+        <h2>by moti</h2>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary" onclick="openSettingsModal()">⚙️ 設定</button>
+        <button class="btn btn-success" onclick="postToDiscord()">📤 投稿</button>
+        <button class="btn btn-primary" onclick="openAddEventModal()">✨ イベント追加</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="calendar">
+      <div class="calendar-header">
+        <div>時刻</div>
+        <div class="day-header">月曜日</div>
+        <div class="day-header">火曜日</div>
+        <div class="day-header">水曜日</div>
+        <div class="day-header">木曜日</div>
+        <div class="day-header">金曜日</div>
+      </div>
+      <div class="calendar-body" id="calendar"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="settingsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">⚙️ Discord設定</h2>
+        <button class="modal-close" onclick="closeSettingsModal()">×</button>
+      </div>
+
+      <form id="settingsForm">
+        <div class="form-group">
+          <label class="form-label">Discord Webhook URL</label>
+          <input type="text" id="webhookUrl" class="form-input" placeholder="https://discord.com/api/webhooks/...">
+          <p class="form-hint">Discordサーバーの設定 → 連携サービス → ウェブフックで取得できます</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">投稿メッセージ</label>
+          <textarea id="postMessage" class="form-textarea" placeholder="今週のスケジュールです">今週のスケジュール</textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeSettingsModal()">キャンセル</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="eventModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">イベントを追加</h2>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+
+      <form id="eventForm">
+        <input type="hidden" id="eventId">
+
+        <div class="form-group">
+          <label class="form-label">タイトル *</label>
+          <input type="text" id="eventTitle" class="form-input" required placeholder="会議のタイトル">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">担当者 *</label>
+          <input type="text" id="eventOrganizer" class="form-input" required placeholder="担当者名">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">説明</label>
+          <textarea id="eventDescription" class="form-textarea" placeholder="詳細(任意)"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">曜日 *</label>
+          <select id="eventWeekday" class="form-select" required>
+            <option value="Monday">月曜日</option>
+            <option value="Tuesday">火曜日</option>
+            <option value="Wednesday">水曜日</option>
+            <option value="Thursday">木曜日</option>
+            <option value="Friday">金曜日</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">開始 *</label>
+            <input type="time" id="eventStartTime" class="form-input" required value="09:00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">終了 *</label>
+            <input type="time" id="eventEndTime" class="form-input" required value="10:00">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">カラー</label>
+          <div class="color-picker" id="colorPicker"></div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-delete" id="deleteBtn" onclick="deleteEvent()"
+            style="display:none">削除</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">キャンセル</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <script>
+    let events = [];
+    let draggedEvent = null;
+
+    const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const COLORS = [
+      { value: '#6750A4', label: 'パープル' },
+      { value: '#006A6A', label: 'ティール' },
+      { value: '#7D5260', label: 'ローズ' },
+      { value: '#984061', label: 'マゼンタ' },
+      { value: '#006E26', label: 'グリーン' },
+      { value: '#8B5000', label: 'オレンジ' },
+      { value: '#006874', label: 'シアン' }
+    ];
+
+    function generateTimeSlots() {
+      const slots = [];
+      for (let h = 7; h <= 22; h++) {
+        slots.push(`${h.toString().padStart(2, '0')}:00`);
+      }
+      return slots;
+    }
+
+    const TIME_SLOTS = generateTimeSlots();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initColorPicker();
+      renderCalendar();
+      loadEvents();
+    });
+
+    function initColorPicker() {
+      const picker = document.getElementById('colorPicker');
+      COLORS.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'color-option';
+        div.style.backgroundColor = c.value;
+        div.setAttribute('data-color', c.value);
+        div.title = c.label;
+        div.onclick = () => selectColor(c.value);
+        picker.appendChild(div);
+      });
+      selectColor(COLORS[0].value);
+    }
+
+    function selectColor(color) {
+      document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+      const sel = document.querySelector(`[data-color="${color}"]`);
+      if (sel) sel.classList.add('selected');
+    }
+
+    function renderCalendar() {
+      const cal = document.getElementById('calendar');
+      cal.innerHTML = '';
+
+      const timeCol = document.createElement('div');
+      timeCol.className = 'time-column';
+      TIME_SLOTS.forEach(t => {
+        const slot = document.createElement('div');
+        slot.className = 'time-slot';
+        slot.textContent = t;
+        timeCol.appendChild(slot);
+      });
+      cal.appendChild(timeCol);
+
+      WEEKDAYS.forEach(day => {
+        const dayCol = document.createElement('div');
+        dayCol.className = 'day-column';
+        dayCol.setAttribute('data-day', day);
+
+        TIME_SLOTS.forEach(t => {
+          const cell = document.createElement('div');
+          cell.className = 'time-cell';
+          cell.setAttribute('data-time', t);
+          cell.setAttribute('data-hour', parseInt(t.split(':')[0]));
+
+          cell.ondragover = e => {
+            e.preventDefault();
+            cell.style.background = 'rgba(103, 80, 164, 0.08)';
+          };
+
+          cell.ondragleave = () => {
+            cell.style.background = '';
+          };
+
+          cell.ondrop = e => {
+            e.preventDefault();
+            cell.style.background = '';
+
+            if (!draggedEvent) return;
+
+            const newWeekday = day;
+            const newStartHour = parseInt(t.split(':')[0]);
+            const oldStartHour = parseInt(draggedEvent.startTime.split(':')[0]);
+            const oldEndHour = parseInt(draggedEvent.endTime.split(':')[0]);
+            const oldEndMinutes = parseInt(draggedEvent.endTime.split(':')[1]);
+
+            const duration = (oldEndHour * 60 + oldEndMinutes) - (oldStartHour * 60 + parseInt(draggedEvent.startTime.split(':')[1]));
+
+            const newStartMinutes = parseInt(draggedEvent.startTime.split(':')[1]);
+            const newEndTotalMinutes = newStartHour * 60 + newStartMinutes + duration;
+            const newEndHour = Math.floor(newEndTotalMinutes / 60);
+            const newEndMinutes = newEndTotalMinutes % 60;
+
+            const newStartTime = `${newStartHour.toString().padStart(2, '0')}:${newStartMinutes.toString().padStart(2, '0')}`;
+            const newEndTime = `${newEndHour.toString().padStart(2, '0')}:${newEndMinutes.toString().padStart(2, '0')}`;
+
+            const updatedEvent = {
+              ...draggedEvent,
+              weekday: newWeekday,
+              startTime: newStartTime,
+              endTime: newEndTime
+            };
+
+            showLoading();
+            google.script.run
+              .withSuccessHandler(() => {
+                loadEvents();
+              })
+              .withFailureHandler(err => {
+                console.error(err);
+                alert('移動に失敗しました');
+                hideLoading();
+              })
+              .updateEvent(updatedEvent);
+          };
+
+          dayCol.appendChild(cell);
+        });
+
+        cal.appendChild(dayCol);
+      });
+    }
+
+    function loadEvents() {
+      showLoading();
+      const timeout = setTimeout(() => {
+        hideLoading();
+        alert('タイムアウトしました');
+      }, 10000);
+
+      google.script.run
+        .withSuccessHandler(data => {
+          clearTimeout(timeout);
+          events = data || [];
+          renderEvents();
+          hideLoading();
+        })
+        .withFailureHandler(err => {
+          clearTimeout(timeout);
+          console.error(err);
+          alert('読み込み失敗');
+          hideLoading();
+        })
+        .getEvents();
+    }
+
+    function timeToMinutes(t) {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    }
+
+    function renderEvents() {
+      document.querySelectorAll('.event-card').forEach(el => el.remove());
+
+      if (!Array.isArray(events)) return;
+
+      events.forEach(evt => {
+        if (!evt.weekday || !evt.startTime || !evt.endTime) return;
+
+        const dayCol = document.querySelector(`.day-column[data-day="${evt.weekday}"]`);
+        if (!dayCol) return;
+
+        const card = createEventCard(evt);
+
+        const startHour = parseInt(evt.startTime.split(':')[0]);
+        const endHour = parseInt(evt.endTime.split(':')[0]);
+        const endMinutes = parseInt(evt.endTime.split(':')[1]);
+
+        const startCellIndex = startHour - 7;
+        const endCellIndex = endMinutes > 0 ? endHour - 7 + 1 : endHour - 7;
+        const cellCount = endCellIndex - startCellIndex;
+
+        card.style.position = 'absolute';
+        card.style.top = `${startCellIndex * 80}px`;
+        card.style.height = `${cellCount * 80 - 4}px`;
+        card.style.left = '4px';
+        card.style.right = '4px';
+
+        dayCol.appendChild(card);
+      });
+    }
+
+    function createEventCard(evt) {
+      const card = document.createElement('div');
+      card.className = 'event-card';
+      card.setAttribute('draggable', 'true');
+      card.style.setProperty('--event-color', evt.color || '#6750A4');
+
+      card.innerHTML = `
+        <div class="event-time">${evt.startTime}～${evt.endTime}</div>
+        <div class="event-title">${esc(evt.title || 'タイトルなし')}</div>
+        <div class="event-organizer">👤 ${esc(evt.organizer || '担当者なし')}</div>
+      `;
+
+      card.onclick = (e) => {
+        e.stopPropagation();
+        openEditEventModal(evt);
+      };
+
+      card.ondragstart = e => {
+        draggedEvent = evt;
+        card.classList.add('dragging');
+      };
+
+      card.ondragend = () => {
+        card.classList.remove('dragging');
+      };
+
+      return card;
+    }
+
+    function openAddEventModal() {
+      document.getElementById('modalTitle').textContent = 'イベントを追加';
+      document.getElementById('eventForm').reset();
+      document.getElementById('eventId').value = '';
+      document.getElementById('deleteBtn').style.display = 'none';
+      selectColor(COLORS[0].value);
+      document.getElementById('eventModal').classList.add('active');
+    }
+
+    function openEditEventModal(evt) {
+      document.getElementById('modalTitle').textContent = 'イベントを編集';
+      document.getElementById('eventId').value = evt.id || '';
+      document.getElementById('eventTitle').value = evt.title || '';
+      document.getElementById('eventOrganizer').value = evt.organizer || '';
+      document.getElementById('eventDescription').value = evt.description || '';
+      document.getElementById('eventWeekday').value = evt.weekday || 'Monday';
+      document.getElementById('eventStartTime').value = evt.startTime || '09:00';
+      document.getElementById('eventEndTime').value = evt.endTime || '10:00';
+      selectColor(evt.color || COLORS[0].value);
+      document.getElementById('deleteBtn').style.display = 'block';
+      document.getElementById('eventModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('eventModal').classList.remove('active');
+    }
+
+    document.getElementById('eventForm').onsubmit = e => {
+      e.preventDefault();
+
+      const startTime = document.getElementById('eventStartTime').value;
+      const endTime = document.getElementById('eventEndTime').value;
+
+      const durationMinutes = timeToMinutes(endTime) - timeToMinutes(startTime);
+      if (durationMinutes < 10) {
+        alert('イベントの時間は最低10分必要です。');
+        return;
+      }
+
+      const selectedColorEl = document.querySelector('.color-option.selected');
+      const selectedColor = selectedColorEl ? selectedColorEl.getAttribute('data-color') : COLORS[0].value;
+
+      const eventData = {
+        id: document.getElementById('eventId').value,
+        title: document.getElementById('eventTitle').value,
+        organizer: document.getElementById('eventOrganizer').value,
+        description: document.getElementById('eventDescription').value,
+        weekday: document.getElementById('eventWeekday').value,
+        startTime: startTime,
+        endTime: endTime,
+        color: selectedColor
+      };
+
+      saveEvent(eventData);
+    };
+
+    function saveEvent(data) {
+      showLoading();
+      closeModal();
+
+      google.script.run
+        .withSuccessHandler(() => loadEvents())
+        .withFailureHandler(err => {
+          console.error(err);
+          alert('保存失敗');
+          hideLoading();
+        })
+      [data.id ? 'updateEvent' : 'addEvent'](data);
+    }
+
+    function deleteEvent() {
+      if (!confirm('削除しますか？')) return;
+      showLoading();
+      closeModal();
+
+      google.script.run
+        .withSuccessHandler(() => loadEvents())
+        .withFailureHandler(() => {
+          alert('削除失敗');
+          hideLoading();
+        })
+        .deleteEvent(document.getElementById('eventId').value);
+    }
+
+    function openSettingsModal() {
+      google.script.run
+        .withSuccessHandler(settings => {
+          document.getElementById('webhookUrl').value = settings.webhookUrl || '';
+          document.getElementById('postMessage').value = settings.postMessage || '今週のスケジュール';
+          document.getElementById('settingsModal').classList.add('active');
+        })
+        .getSettings();
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.remove('active');
+    }
+
+    document.getElementById('settingsForm').onsubmit = e => {
+      e.preventDefault();
+      const settings = {
+        webhookUrl: document.getElementById('webhookUrl').value,
+        postMessage: document.getElementById('postMessage').value
+      };
+
+      google.script.run
+        .withSuccessHandler(() => {
+          alert('設定を保存しました');
+          closeSettingsModal();
+        })
+        .withFailureHandler(err => {
+          console.error(err);
+          alert('保存に失敗しました');
+        })
+        .saveSettings(settings);
+    };
+
+    function postToDiscord() {
+      const calendar = document.querySelector('.calendar');
+      showLoading();
+
+      html2canvas(calendar, {
+        backgroundColor: '#FEF7FF',
+        scale: 1,
+        logging: false
+      }).then(canvas => {
+        const imageData = canvas.toDataURL('image/png');
+
+        google.script.run
+          .withSuccessHandler(() => {
+            hideLoading();
+            alert('Discordに投稿しました!');
+          })
+          .withFailureHandler(err => {
+            hideLoading();
+            console.error(err);
+            alert('投稿に失敗しました: ' + (err.message || '設定を確認してください'));
+          })
+          .postToDiscord(imageData);
+      }).catch(err => {
+        hideLoading();
+        console.error(err);
+        alert('スクリーンショットの作成に失敗しました');
+      });
+    }
+
+    function showLoading() { document.getElementById('loading').classList.add('active'); }
+    function hideLoading() { document.getElementById('loading').classList.remove('active'); }
+    function esc(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+  </script>
+</body>
+
+</html>
